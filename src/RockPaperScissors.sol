@@ -16,8 +16,8 @@ contract RockPaperScissors {
         MoveOption revealedMove;
     }
 
-    uint256 public numTotalMoves = 0;
-    address[] public playerAddresses;
+    address[2] public playerAddresses;
+    uint8 internal moveCount = 0;
     mapping(address => GameMove) public gameMoves;
 
     /**
@@ -25,16 +25,19 @@ contract RockPaperScissors {
      * @param _commitment A combination of the move itself, and a secret hashed together.
      */
     function commitMove(bytes32 _commitment) public {
-        require(numTotalMoves < 2, "Too many game moves.");
+        require(moveCount < 2, "Too many game moves.");
+        require(
+            gameMoves[msg.sender].commitment == bytes32(0),
+            "You can only submit one move."
+        );
 
         gameMoves[msg.sender] = GameMove({
             commitment: _commitment,
             revealedMove: MoveOption.NotRevealedYet
         });
 
-        numTotalMoves++;
-
-        playerAddresses.push(msg.sender);
+        playerAddresses[moveCount] = msg.sender;
+        moveCount++;
     }
 
     /**
@@ -47,6 +50,11 @@ contract RockPaperScissors {
         require(
             gameMoves[msg.sender].commitment != bytes32(0),
             "No committed move to reveal"
+        );
+
+        require(
+            moveCount == 2,
+            "Both players must commit their moves before revealing."
         );
 
         bytes32 calculatedCommmitment = keccak256(
@@ -65,10 +73,7 @@ contract RockPaperScissors {
      * See who won using the basic rules of RPS (e.g. paper beats rock)
      */
     function determineWinner() public view returns (address winner) {
-        require(
-            playerAddresses.length == 2,
-            "Both players must commit their moves first"
-        );
+        require(moveCount == 2, "Both players must commit their moves first");
 
         address p1Address = playerAddresses[0];
         MoveOption p1Move = gameMoves[p1Address].revealedMove;

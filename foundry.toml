@@ -1,4 +1,5 @@
 [profile.default]
+gas_reports = ["*"]
 src = 'src'
 out = 'out'
 libs = ['lib']

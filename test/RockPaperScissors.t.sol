@@ -22,10 +22,10 @@ contract ContractTest is Test {
             )
         );
 
-        vm.prank(player1);
+        vm.startPrank(player1);
         rps.commitMove(testCommitment);
-
-        assertEq(rps.numTotalMoves(), 1);
+        vm.expectRevert("You can only submit one move.");
+        rps.commitMove(testCommitment);
 
         (bytes32 commitment, RockPaperScissors.MoveOption revealedMove) = rps
             .gameMoves(player1);
@@ -40,7 +40,6 @@ contract ContractTest is Test {
 
     function testSuccesfulReveal() public {
         vm.startPrank(player1);
-
         vm.expectRevert("No committed move to reveal");
         rps.revealMove(
             RockPaperScissors.MoveOption.Scissors,
@@ -56,6 +55,24 @@ contract ContractTest is Test {
 
         rps.commitMove(testCommitment);
 
+        vm.expectRevert(
+            "Both players must commit their moves before revealing."
+        );
+        rps.revealMove(
+            RockPaperScissors.MoveOption.Scissors,
+            bytes32("player1-secret")
+        );
+        vm.stopPrank();
+
+        vm.startPrank(player2);
+        rps.commitMove(testCommitment);
+        rps.revealMove(
+            RockPaperScissors.MoveOption.Scissors,
+            bytes32("player1-secret")
+        );
+        vm.stopPrank();
+
+        vm.prank(player1);
         rps.revealMove(
             RockPaperScissors.MoveOption.Scissors,
             bytes32("player1-secret")
@@ -83,6 +100,10 @@ contract ContractTest is Test {
         );
 
         vm.prank(player1);
+        rps.commitMove(testCommitmentP1);
+
+        vm.prank(player1);
+        vm.expectRevert("You can only submit one move.");
         rps.commitMove(testCommitmentP1);
 
         vm.expectRevert("Both players must commit their moves first");
@@ -132,6 +153,10 @@ contract ContractTest is Test {
 
         address winner = rps.determineWinner();
 
+        assertEq(rps.playerAddresses(0), address(player1));
+        assertEq(rps.playerAddresses(1), address(player2));
+        vm.expectRevert();
+        assertEq(rps.playerAddresses(2), address(0x00));
         assertEq(winner, player2);
     }
 }
