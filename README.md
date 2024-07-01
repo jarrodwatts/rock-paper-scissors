@@ -28,13 +28,7 @@ This repo uses [Foundry](https://github.com/foundry-rs/foundry) as the developme
     curl -L https://foundry.paradigm.xyz | bash
     ```
 
-3. Install the dependencies:
-
-    ```bash
-    foundry install
-    ```
-
-4. Build and test the smart contracts:
+3. Build and test the smart contracts:
     
     ```bash
     foundry test
